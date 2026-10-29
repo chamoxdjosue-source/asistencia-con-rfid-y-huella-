@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comedor Escolar — Control de Almuerzos</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%234f46e5'/><stop offset='1' stop-color='%237c3aed'/></linearGradient></defs><rect width='100' height='100' rx='18' fill='url(%23g)'/><text x='50' y='68' font-size='58' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'>C</text></svg>">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-interior">
+      <div class="marca">
+        <div class="marca-logo" aria-hidden="true">C</div>
+        <div class="marca-texto">
+          <h1>Comedor Escolar</h1>
+          <p>Control de almuerzos y saldo de estudiantes</p>
+        </div>
+      </div>
+      <div class="estado-sistema">
+        <span id="chipLector" class="chip chip-desconocido">Lector: verificando…</span>
+        <span id="chipDb" class="chip chip-ok">Datos: Firestore</span>
+        <span class="fecha" id="fechaActual"></span>
+      </div>
+      <nav class="pestanas" aria-label="Pestañas del sistema">
+        <a class="pestana" id="linkAlumno" href="/alumno" target="_blank" rel="noopener">Alumno</a>
+        <a class="pestana" id="linkAdmin" href="/admin" target="_blank" rel="noopener">Administración</a>
+        <span class="pestana pestana-actual" id="pestanaActual">Inicio</span>
+      </nav>
+    </div>
+  </header>
+
+  <main class="contenedor">
+
+    <section class="panel panel-ultimo">
+      <div id="ultimo" class="ultimo idle">
+        <span class="ultimo-icono">—</span>
+        <div class="ultimo-cuerpo">
+          <strong id="ultimoTitulo">Esperando tarjeta…</strong>
+          <span id="ultimoDetalle"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VISTA: LOGIN ============ -->
+    <section id="vistaLogin" class="login-layout">
+      <div class="login-hero">
+        <span class="eyebrow">Comedor Escolar</span>
+        <h2>Tu almuerzo y tu asistencia, en un mismo lugar</h2>
+        <p>Consulta tu saldo, paga tu almuerzo y revisa tus entradas y salidas del comedor. Todo desde el teléfono o la computadora.</p>
+        <div class="hero-art">
+          <div class="hero-art-icono">C</div>
+          <strong>Saldo, pagos y asistencia</strong>
+          <span>Ingresa con el nombre y la contraseña que te dio el encargado (contra1, contra2, …).</span>
+        </div>
+      </div>
+
+      <div class="panel panel-login">
+        <div class="login-encabezado">
+          <span class="chip chip-ok">Acceso estudiante</span>
+          <h2>Inicia sesión</h2>
+          <p class="sub-modal">Escribe tu nombre y tu contraseña.</p>
+        </div>
+
+        <datalist id="sugerenciasEstudiantes"></datalist>
+        <label class="etiqueta" for="loginNombre">Nombre de la persona</label>
+        <input id="loginNombre" list="sugerenciasEstudiantes" class="campo" placeholder="Ej: Juan Pérez" autocomplete="off">
+
+        <label class="etiqueta" for="loginPassword">Contraseña</label>
+        <input type="password" id="loginPassword" class="campo" placeholder="Tu contraseña" autocomplete="current-password">
+
+        <button id="btnEntrarUsuario" class="btn btn-primario btn-ancho">Entrar</button>
+        <p id="loginMsg" class="mensaje"></p>
+
+        <div class="divisor"><span>o</span></div>
+
+        <div class="acceso-admin">
+          <button id="btnMostrarAdmin" class="btn btn-secundario btn-ancho">Administrador</button>
+          <div id="adminLoginCuerpo" class="oculto admin-login-cuerpo">
+            <label class="etiqueta" for="passwordAdmin">Contraseña de administrador</label>
+            <input type="password" id="passwordAdmin" class="campo" autocomplete="current-password">
+            <label class="check">
+              <input type="checkbox" id="adminNuevaPestana" checked>
+              <span>Abrir en una pestaña nueva</span>
+            </label>
+            <div class="fila fila-botones">
+              <button id="btnEntrarAdmin" class="btn btn-primario">Entrar</button>
+              <button id="btnVolverUsuario" class="btn btn-secundario">Volver</button>
+            </div>
+            <p id="loginAdminMsg" class="mensaje"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VISTA: USUARIO NORMAL ============ -->
+    <section id="vistaUsuario" class="oculto">
+      <div class="panel panel-sesion">
+        <div class="panel-cabecera">
+          <div>
+            <span class="chip chip-ok">Sesión de estudiante</span>
+            <h2 class="saludo" id="saludoUsuario">Hola, </h2>
+            <p class="sub-modal" id="cursoUsuario"></p>
+          </div>
+          <button id="btnCerrarSesionUsuario" class="btn btn-secundario">Cerrar sesión</button>
+        </div>
+
+        <div class="fila-abrir">
+          <button id="btnAbrirAdmin" class="btn-enlace" type="button">Abrir administración en otra pestaña →</button>
+        </div>
+      </div>
+
+      <div class="sub-pestanas" role="tablist" aria-label="Secciones del estudiante">
+        <button type="button" class="sub-pestana activa" data-tab="comedor" role="tab" aria-selected="true">Comedor</button>
+        <button type="button" class="sub-pestana" data-tab="asistencia" role="tab" aria-selected="false">Asistencia</button>
+      </div>
+
+      <div id="tabComedor" class="tab-vista">
+      <div class="panel">
+        <div class="tarjeta-saldo" id="tarjetaSaldo">
+          <div class="saldo-cabecera">
+            <span>Saldo disponible</span>
+            <span class="chip chip-neutro" id="chipSaldo">…</span>
+          </div>
+          <strong class="saldo-cifra" id="saldoUsuario">…</strong>
+          <p class="saldo-pie" id="saldoDetalle">Cargando tu saldo…</p>
+          <div class="saldo-datos">
+            <div><span>Almuerzo</span><strong id="saldoPrecio">—</strong></div>
+            <div><span>Te alcanza</span><strong id="saldoAlmuerzos">—</strong></div>
+          </div>
+        </div>
+
+        <button id="btnPagar" class="btn btn-primario btn-ancho btn-pagar" disabled>Pagar almuerzo</button>
+        <p id="pagoMsg" class="mensaje"></p>
+        <button id="btnIrARecarga" class="enlace-boton oculto">¿Te falta saldo? Recargar ahora</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-cabecera">
+          <div>
+            <span class="eyebrow">Agregar saldo</span>
+            <h2>Paga y envía tu comprobante</h2>
+          </div>
+        </div>
+        <button id="btnToggleRecarga" class="btn btn-secundario btn-ancho" aria-expanded="false" aria-controls="recargaCuerpo">Ver cómo pagar</button>
+        <div id="recargaCuerpo" class="oculto recarga-cuerpo">
+
+          <ol class="pasos">
+            <li class="paso">
+              <b>1</b>
+              <div><strong>Paga con el QR</strong><span>Escanea el código y transfiere el monto.</span></div>
+            </li>
+            <li class="paso">
+              <b>2</b>
+              <div><strong>Sube el comprobante</strong><span>Una foto o captura de la transferencia.</span></div>
+            </li>
+            <li class="paso">
+              <b>3</b>
+              <div><strong>Espera la aprobación</strong><span>Te avisamos en cuanto se acredite.</span></div>
+            </li>
+          </ol>
+
+          <div class="qr-bloque">
+            <img src="/qr-pago.jpeg" alt="Código QR de pago" class="qr-imagen" id="qrImagen">
+            <p class="qr-pista">Toca el código para verlo completo</p>
+            <div class="titular-qr">
+              <span class="etiqueta">Paga a</span>
+              <strong id="qrTitular">cargando…</strong>
+              <span class="pista" id="qrDatos"></span>
+            </div>
+          </div>
+
+          <div class="campo-grupo">
+            <label class="etiqueta" for="recargaMontoUsuario">Monto que pagaste</label>
+            <div class="campo-monto">
+              <input id="recargaMontoUsuario" type="number" min="1" step="0.5" inputmode="decimal" placeholder="0,00" class="campo">
+              <span class="sufijo">Bs</span>
+            </div>
+            <div class="chips-monto" data-input="recargaMontoUsuario">
+              <button type="button" class="chip-btn" data-monto="10">10</button>
+              <button type="button" class="chip-btn" data-monto="20">20</button>
+              <button type="button" class="chip-btn" data-monto="50">50</button>
+              <button type="button" class="chip-btn" data-monto="100">100</button>
+            </div>
+          </div>
+
+          <div class="campo-grupo">
+            <label class="etiqueta" for="recargaNota">Nota o referencia <span class="opcional">opcional</span></label>
+            <input id="recargaNota" class="campo" placeholder="Ej: pago móvil, depósito…">
+          </div>
+
+          <div class="campo-grupo">
+            <span class="etiqueta">Comprobante</span>
+            <div class="zona-soltar" id="zonaSoltar" tabindex="0" role="button">
+              <input id="recargaArchivo" type="file" accept="image/*" class="input-oculto">
+              <span class="zona-icono" aria-hidden="true">+</span>
+              <span class="zona-texto">
+                <strong>Toca o arrastra la foto</strong>
+                <span class="pista">JPG o PNG · la reducimos antes de subirla</span>
+              </span>
+            </div>
+            <div id="vistaPrevia" class="vista-previa oculto">
+              <img id="vistaPreviaImg" alt="Vista previa del comprobante" class="vista-previa-img">
+              <div class="vista-previa-info">
+                <span id="vistaPreviaNombre"></span>
+                <span id="vistaPreviaPeso" class="pista"></span>
+              </div>
+              <button type="button" id="btnQuitarArchivo" class="btn-icono" title="Quitar imagen" aria-label="Quitar imagen">&times;</button>
+            </div>
+            <p class="pista oculto" id="pistaArchivo"></p>
+          </div>
+
+          <button id="btnEnviarComprobante" class="btn btn-primario btn-ancho btn-enviar">Enviar comprobante</button>
+          <p id="comprobanteMsg" class="mensaje"></p>
+
+          <div id="revisionIA" class="revision oculto" role="status">
+            <div class="revision-cabecera">
+              <strong id="revisionTitulo">Revisión del comprobante</strong>
+              <span class="chip chip-neutro" id="revisionEstado">revisando</span>
+            </div>
+            <ul id="revisionLista" class="revision-lista"></ul>
+            <p class="pista revision-resumen" id="revisionResumen"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-cabecera">
+          <h2>Historial de tus movimientos</h2>
+        </div>
+        <div class="tabla-envoltura">
+          <table>
+            <thead>
+              <tr>
+                <th>Nro</th>
+                <th>Tipo</th>
+                <th class="num">Monto (Bs)</th>
+                <th class="num">Saldo ant.</th>
+                <th class="num">Saldo nuevo</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+              </tr>
+            </thead>
+            <tbody id="tablaHistorial"></tbody>
+          </table>
+          <p id="vacioHistorial" class="vacio">Aún no tienes movimientos.</p>
+        </div>
+      </div>
+      </div><!-- /tabComedor -->
+
+      <div id="tabAsistencia" class="tab-vista oculto">
+        <div class="panel">
+          <div class="panel-cabecera">
+            <div>
+              <span class="eyebrow">Asistencia</span>
+              <h2>Mis entradas y salidas</h2>
+              <p class="sub-modal">Aquí ves los días que viniste al comedor, con la hora de entrada, la hora de salida y cuánto tiempo estuviste.</p>
+            </div>
+            <span class="chip chip-neutro" id="chipMiAsistencia">…</span>
+          </div>
+          <div class="resumen-asistencia" id="resumenMiAsistencia"></div>
+          <div class="tabla-envoltura">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Entrada</th>
+                  <th>Salida</th>
+                  <th>Estado</th>
+                  <th>Permanencia</th>
+                </tr>
+              </thead>
+              <tbody id="tablaMiAsistencia"></tbody>
+            </table>
+            <p id="vacioMiAsistencia" class="vacio">Aún no tienes asistencias registradas.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VISTA: ADMINISTRADOR ============ -->
+    <section id="vistaAdmin" class="oculto">
+      <div class="panel panel-cabecera panel-admin-barra">
+        <div>
+          <span class="chip chip-ok">Sesión de administrador activa</span>
+          <h2>Panel de administración</h2>
+        </div>
+        <div class="fila-botones">
+          <button id="btnAbrirAlumno" class="btn-enlace">Abrir vista del alumno →</button>
+          <button id="btnCerrarSesion" class="btn btn-secundario">Cerrar sesión</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="col-principal">
+          <section class="panel">
+            <div class="panel-cabecera">
+              <h2>Transacciones recientes</h2>
+              <div class="barra-filtros">
+                <select id="filtroTipo" class="campo">
+                  <option value="todos">Todos los tipos</option>
+                  <option value="COMPRA">Compras</option>
+                  <option value="RECARGA">Recargas</option>
+                </select>
+                <input type="date" id="filtroDesde" title="Desde" class="campo">
+                <input type="date" id="filtroHasta" title="Hasta" class="campo">
+                <input type="search" id="filtroTexto" class="campo" placeholder="Buscar estudiante…">
+                <button id="btnExportar" class="btn btn-secundario">Exportar CSV</button>
+              </div>
+            </div>
+            <div class="tabla-envoltura">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nro</th>
+                    <th>Estudiante</th>
+                    <th>Curso</th>
+                    <th>Tipo</th>
+                    <th class="num">Monto (Bs)</th>
+                    <th class="num">Saldo ant.</th>
+                    <th class="num">Saldo nuevo</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Método</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="tablaTransacciones"></tbody>
+              </table>
+              <p id="vacioTransacciones" class="vacio">Sin transacciones para los filtros seleccionados.</p>
+            </div>
+          </section>
+        </div>
+
+        <div class="col-lateral">
+          <section class="panel">
+            <div class="panel-cabecera">
+              <h2>Estudiantes</h2>
+              <button id="btnNuevoEstudiante" class="btn btn-secundario" type="button">＋ Nuevo</button>
+            </div>
+
+            <div id="nuevoEstudianteCuerpo" class="oculto nuevo-estudiante">
+              <label class="etiqueta" for="nuevoNombre">Nombre</label>
+              <input id="nuevoNombre" class="campo" placeholder="Ej: Juan Pérez" autocomplete="off">
+
+              <div class="fila grupo-doble">
+                <div class="grupo">
+                  <label class="etiqueta" for="nuevoCurso">Curso</label>
+                  <input id="nuevoCurso" class="campo" placeholder="Ej: 6to" autocomplete="off">
+                </div>
+                <div class="grupo">
+                  <label class="etiqueta" for="nuevoId">ID (opcional)</label>
+                  <input id="nuevoId" class="campo" placeholder="Se genera solo" autocomplete="off">
+                </div>
+              </div>
+
+              <label class="etiqueta" for="nuevoRfid">Tarjeta RFID (opcional)</label>
+              <input id="nuevoRfid" class="campo" placeholder="Acerca el carnet al lector" autocomplete="off">
+
+              <label class="etiqueta" for="nuevoPassword">Contraseña</label>
+              <input id="nuevoPassword" class="campo" placeholder="Se genera sola (contra10)" autocomplete="off">
+
+              <button id="btnCrearEstudiante" class="btn btn-primario btn-ancho btn-crear">Crear estudiante</button>
+              <p id="nuevoEstudianteMsg" class="mensaje"></p>
+            </div>
+
+            <input type="search" id="buscarEstudiante" class="campo" placeholder="Buscar por nombre o curso…">
+            <div class="tabla-envoltura">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Curso</th>
+                    <th>Tarjeta</th>
+                    <th class="num">Saldo (Bs)</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaEstudiantes"></tbody>
+              </table>
+              <p id="vacioEstudiantes" class="vacio">No hay estudiantes registrados.</p>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="panel panel-asistencia">
+        <div class="panel-cabecera">
+          <div>
+            <span class="eyebrow">Asistencia</span>
+            <h2>Huella dactilar</h2>
+            <p class="sub-modal">Si un estudiante olvidó o perdió su tarjeta, puede marcar su entrada y salida con la huella registrada en el sensor del comedor. La huella se guarda en el sensor, no en la web.</p>
+          </div>
+          <span class="chip chip-neutro" id="chipHuellas">0 registradas</span>
+        </div>
+
+        <div id="solicitudHuella" class="aviso-huella oculto" role="status" aria-live="polite">
+          <span class="aviso-huella-icono" id="huellaIcono">☝</span>
+          <div class="aviso-huella-texto">
+            <strong id="huellaTitulo">Registrando huella…</strong>
+            <span id="huellaDetalle">Pon el dedo en el sensor del comedor.</span>
+          </div>
+          <button id="btnCancelarHuella" class="btn btn-secundario" type="button">Cancelar</button>
+        </div>
+
+        <input type="search" id="buscarHuella" class="campo" placeholder="Buscar estudiante por nombre o curso…">
+        <div class="tabla-envoltura">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Curso</th>
+                <th>Huella</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="tablaHuellas"></tbody>
+          </table>
+          <p id="vacioHuellas" class="vacio">No hay estudiantes registrados.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-cabecera">
+          <div>
+            <span class="eyebrow">Asistencia del lector</span>
+            <h2>Entradas y salidas del día</h2>
+            <p class="sub-modal">Lo mismo que registra la tarjeta y la huella. Puedes corregir a mano si alguien olvidó marcar.</p>
+          </div>
+          <input type="date" id="fechaAsistencia" class="campo" aria-label="Fecha de la asistencia">
+        </div>
+        <div class="resumen-asistencia" id="resumenAsistencia"></div>
+        <div class="tabla-envoltura">
+          <table>
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Curso</th>
+                <th>Entrada</th>
+                <th>Salida</th>
+                <th>Estado</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="tablaAsistencias"></tbody>
+          </table>
+          <p id="vacioAsistencias" class="vacio">Sin registros para ese día.</p>
+        </div>
+      </div>
+
+      <div class="panel panel-admin">
+        <div class="admin-grid">
+          <div class="panel panel-interno ancho caja">
+            <div class="panel-cabecera">
+              <div>
+                <span class="eyebrow">Crédito manual</span>
+                <h3>Agregar saldo a un estudiante</h3>
+              </div>
+            </div>
+            <p class="sub-modal">Queda registrado en el historial y se puede revertir si te equivocaste.</p>
+            <div class="recarga-admin">
+              <div class="recarga-bloque">
+                <label class="etiqueta" for="buscarRecarga">Buscar estudiante</label>
+                <input type="search" id="buscarRecarga" class="campo" placeholder="Nombre o curso…" autocomplete="off">
+                <label class="etiqueta" for="recargarEstudiante">Estudiante</label>
+                <select id="recargarEstudiante" class="campo"></select>
+                <p class="pista" id="pistaRecarga"></p>
+              </div>
+
+              <div class="recarga-bloque">
+                <label class="etiqueta" for="recargarMonto">Monto</label>
+                <div class="campo-monto">
+                  <input id="recargarMonto" type="number" min="0.5" step="0.5" value="10" inputmode="decimal" class="campo">
+                  <span class="sufijo">Bs</span>
+                </div>
+                <div class="chips-monto" data-input="recargarMonto">
+                  <button type="button" class="chip-btn" data-monto="10">10</button>
+                  <button type="button" class="chip-btn" data-monto="20">20</button>
+                  <button type="button" class="chip-btn" data-monto="50">50</button>
+                  <button type="button" class="chip-btn" data-monto="100">100</button>
+                </div>
+
+                <label class="etiqueta" for="recargarMetodo">Método de pago</label>
+                <select id="recargarMetodo" class="campo">
+                  <option value="efectivo">Efectivo</option>
+                  <option value="pago móvil">Pago móvil</option>
+                  <option value="transferencia">Transferencia</option>
+                  <option value="comprobante">Comprobante</option>
+                  <option value="manual" selected>Otro / manual</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="resumen-recarga">
+              <div class="resumen-celda">
+                <span>Saldo actual</span>
+                <strong id="resumenActual">Bs 0,00</strong>
+              </div>
+              <span class="resumen-flecha" aria-hidden="true">&rarr;</span>
+              <div class="resumen-celda">
+                <span>Saldo nuevo</span>
+                <strong id="resumenNuevo" class="destacado">Bs 0,00</strong>
+              </div>
+              <button id="btnRecargar" class="btn btn-primario btn-recargar" disabled>Agregar saldo</button>
+            </div>
+            <p id="recargaMsg" class="mensaje"></p>
+          </div>
+
+          <div class="panel panel-interno">
+            <div class="panel-cabecera">
+              <div>
+                <span class="eyebrow">Ajustes</span>
+                <h3>Configuración del comedor</h3>
+              </div>
+            </div>
+            <label class="etiqueta" for="configPrecio">Precio de un almuerzo (Bs)</label>
+            <div class="fila">
+              <div class="grupo">
+                <input id="configPrecio" type="number" min="0" step="0.5" inputmode="decimal" class="campo">
+              </div>
+              <button id="btnGuardarPrecio" class="btn btn-primario">Guardar</button>
+            </div>
+            <p id="configMsg" class="mensaje"></p>
+
+            <div class="sub-panel">
+              <h4>Titular del QR de pago</h4>
+              <p class="pista">La IA compara a quién dice el comprobante que se le pagó con este nombre.</p>
+              <button id="btnLeerQr" class="btn btn-secundario btn-ancho">Leer el QR con IA</button>
+              <label class="etiqueta" for="configTitular">Nombre del titular</label>
+              <input id="configTitular" class="campo" placeholder="Nombre como aparece en el QR">
+              <div class="fila grupo-doble">
+                <div class="grupo">
+                  <label class="etiqueta" for="configCedula">Cédula</label>
+                  <input id="configCedula" class="campo" placeholder="Opcional" inputmode="numeric">
+                </div>
+                <div class="grupo">
+                  <label class="etiqueta" for="configBanco">Banco</label>
+                  <input id="configBanco" class="campo" placeholder="Opcional">
+                </div>
+              </div>
+              <label class="etiqueta" for="configVentana">Antigüedad máxima del comprobante (horas)</label>
+              <div class="fila">
+                <div class="grupo">
+                  <input id="configVentana" type="number" min="1" max="720" step="1" value="48" class="campo">
+                </div>
+                <button id="btnGuardarTitular" class="btn btn-primario">Guardar</button>
+              </div>
+              <p id="titularMsg" class="mensaje"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-cabecera">
+          <div>
+            <h2>Solicitudes de recarga</h2>
+            <p class="sub-modal">Comprobantes enviados por estudiantes que esperan tu aprobación.</p>
+          </div>
+          <span class="chip chip-neutro" id="contadorSolicitudes">0 pendientes</span>
+        </div>
+        <div class="tabla-envoltura">
+          <table>
+            <thead>
+              <tr>
+                <th>Nro</th>
+                <th>Estudiante</th>
+                <th class="num">Monto (Bs)</th>
+                <th>Quién envía</th>
+                <th>A quién pagó</th>
+                <th>Hora del comprobante</th>
+                <th>Revisión automática</th>
+                <th>Comprobante</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="tablaSolicitudes"></tbody>
+          </table>
+          <p id="vacioSolicitudes" class="vacio">Sin solicitudes pendientes.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="pie">
+    <details class="herramientas">
+      <summary>Herramientas de prueba ubicación local</summary>
+      <div class="fila">
+        <input id="uidManual" placeholder="Ingresar UID manual (ej: 1486297920)" class="campo">
+        <button id="btnProbarUid" class="btn btn-secundario">Probar tarjeta</button>
+      </div>
+    </details>
+  </footer>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <div id="modalOverlay" class="modal-overlay oculto" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+    <div class="modal">
+      <h2 id="modalTitulo">Confirmar</h2>
+      <p id="modalTexto" class="sub-modal"></p>
+      <div id="modalDetalle" class="modal-detalle"></div>
+      <div id="modalCampoWrap" class="oculto">
+        <label class="etiqueta" for="modalCampo">Motivo</label>
+        <input id="modalCampo" class="campo" autocomplete="off">
+      </div>
+      <div class="modal-acciones">
+        <button id="modalCancelar" class="btn btn-secundario">Cancelar</button>
+        <button id="modalAceptar" class="btn btn-primario">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="lightbox" class="lightbox oculto" role="dialog" aria-modal="true" aria-label="Comprobante">
+    <button id="lightboxCerrar" class="lightbox-cerrar" aria-label="Cerrar">&times;</button>
+    <img id="lightboxImg" alt="Comprobante ampliado">
+  </div>
+
+  <!-- SDK de Firebase: solo se usa cuando la web la sirve el hosting (modo nube).
+       Con el servidor local el mismo archivo habla con /api/* y no lo necesita. -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="/firebase-web.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

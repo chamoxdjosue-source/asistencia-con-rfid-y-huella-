@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistema integrado de control de asistencia escolar y gestión de comedor del Complejo Integral Educativo Luz y Verdad.">
+  <title>Luz y Verdad — Asistencia y Comedor</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%233d2b21'/><path d='M50 18l24 10v22c0 15-10 26-24 32-14-6-24-17-24-32V28z' fill='%23d8b98d'/><path d='M38 50l8 8 16-18' fill='none' stroke='%233d2b21' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- ============ BARRA LATERAL ============ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-mark">
+          <img src="/logodelcolegio.jpg" alt="Logo del Complejo Integral Educativo Luz y Verdad" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+          <i class="fa-solid fa-bowl-food" style="display:none;"></i>
+        </div>
+        <div class="sidebar-logo-text">
+          <strong>Luz y Verdad</strong>
+          <span>Asistencia y comedor</span>
+        </div>
+        <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Cerrar menú">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Módulos del sistema">
+        <p class="sidebar-section" data-roles="usuario">Mi espacio</p>
+        <button type="button" class="sidebar-nav-link active" id="sidebarInicio" data-modulo="est-inicio" data-roles="usuario">
+          <i class="fa-solid fa-house"></i><span>Inicio</span>
+        </button>
+        <button type="button" class="sidebar-nav-link" id="sidebarAlumno" data-modulo="est-comedor" data-roles="usuario">
+          <i class="fa-solid fa-wallet"></i><span>Saldo y comedor</span>
+        </button>
+        <button type="button" class="sidebar-nav-link" id="sidebarRecarga" data-modulo="est-recarga" data-roles="usuario">
+          <i class="fa-solid fa-arrow-down-to-line"></i><span>Recargar saldo</span>
+        </button>
+        <button type="button" class="sidebar-nav-link" id="sidebarMisSolicitudes" data-modulo="est-solicitudes" data-roles="usuario">
+          <i class="fa-solid fa-receipt"></i><span>Mis solicitudes</span>
+        </button>
+        <button type="button" class="sidebar-nav-link" id="sidebarAsistenciaAlumno" data-modulo="est-asistencia" data-roles="usuario">
+          <i class="fa-solid fa-calendar-check"></i><span>Mi asistencia</span>
+        </button>
+
+        <p class="sidebar-section" data-roles="admin caja cocinera">Operación</p>
+        <button type="button" class="sidebar-nav-link" id="sidebarAdmin" data-modulo="admin-inicio" data-roles="admin caja cocinera">
+          <i class="fa-solid fa-chart-pie"></i><span>Resumen</span>
+        </button>
+        <button type="button" class="sidebar-nav-link" id="sidebarComprobantes" data-modulo="admin-comprobantes" data-roles="admin caja">
+          <i class="fa-solid fa-receipt"></i><span>Comprobantes</span>
+          <span class="nav-badge oculto" id="badgeComprobantes">0</span>
+        </button>
+        <button type="button" class="sidebar-nav-link" id="sidebarSaldos" data-modulo="admin-saldos" data-roles="admin caja">
+          <i class="fa-solid fa-coins"></i><span>Saldos y movimientos</span>
+        </button>
+        <button type="button" class="sidebar-nav-link" id="sidebarEstudiantes" data-modulo="admin-estudiantes" data-roles="admin caja">
+          <i class="fa-solid fa-user-graduate"></i><span>Estudiantes</span>
+        </button>
+        <button type="button" class="sidebar-nav-link" id="sidebarPedidos" data-modulo="admin-pedidos" data-roles="admin caja cocinera">
+          <i class="fa-solid fa-bowl-food"></i><span>Pedidos del día</span>
+        </button>
+        <button type="button" class="sidebar-nav-link" id="sidebarEntregas" data-modulo="admin-entregas" data-roles="admin cocinera">
+          <i class="fa-solid fa-hand-holding-heart"></i><span>Entregas</span>
+        </button>
+        <button type="button" class="sidebar-nav-link" id="sidebarAsistencia" data-modulo="admin-asistencia" data-roles="admin caja cocinera">
+          <i class="fa-solid fa-clipboard-user"></i><span>Asistencia general</span>
+        </button>
+        <button type="button" class="sidebar-nav-link" id="sidebarHuellas" data-modulo="admin-huellas" data-roles="admin">
+          <i class="fa-solid fa-fingerprint"></i><span>Huella dactilar</span>
+        </button>
+        <button type="button" class="sidebar-nav-link" id="sidebarConfig" data-modulo="admin-config" data-roles="admin">
+          <i class="fa-solid fa-sliders"></i><span>Configuración</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-user-avatar">
+            <i class="fa-solid fa-user" id="sidebarIconoUsuario"></i>
+          </div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarNombreUsuario">Invitado</div>
+            <div class="sidebar-user-email" id="sidebarRolUsuario">Sin sesión</div>
+          </div>
+        </div>
+        <button type="button" class="sidebar-logout oculto" id="sidebarCerrarSesion">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i><span>Cerrar sesión</span>
+        </button>
+      </div>
+    </aside>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="main-area">
+      <header class="topbar">
+        <button type="button" class="topbar-menu" id="btnMenu" aria-label="Abrir menú">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="topbar-title">
+          <span class="eyebrow" id="topbarEyebrow">Sistema integrado</span>
+          <h1 id="pestanaActual">Inicio</h1>
+        </div>
+        <div class="topbar-right">
+          <div class="status-chips">
+            <span id="chipLector" class="chip chip-desconocido">Lector: verificando…</span>
+            <span id="chipLectorAsistencia" class="chip chip-desconocido">Asistencia: verificando…</span>
+            <span id="chipDb" class="chip chip-ok">Datos: Firestore</span>
+          </div>
+          <div class="date-box-new">
+            <i class="fa-regular fa-calendar-days"></i>
+            <div><strong id="fechaActual"></strong><span>Sistema en tiempo real</span></div>
+          </div>
+        </div>
+      </header>
+
+      <main class="main-content-wrapper">
+
+        <!-- ============ VISTA: LOGIN ============ -->
+        <section id="vistaLogin" class="login-layout">
+          <div class="login-hero">
+            <span class="eyebrow eyebrow-light">Complejo Integral Educativo</span>
+            <h2>Luz y Verdad</h2>
+            <p>Asistencia escolar y comedor en un solo lugar. Consulta tu saldo, revisa tus entradas y salidas y gestiona las recargas del comedor de forma segura.</p>
+            <div class="hero-features">
+              <div class="hero-feature"><i class="fa-solid fa-fingerprint"></i><span>Control con RFID y huella dactilar</span></div>
+              <div class="hero-feature"><i class="fa-solid fa-cloud"></i><span>Datos sincronizados con Firebase</span></div>
+              <div class="hero-feature"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Revisión inteligente de comprobantes</span></div>
+            </div>
+            <div class="hero-art">
+              <div class="hero-art-icono"><i class="fa-solid fa-utensils"></i></div>
+              <div><strong>Un acceso para cada persona</strong><span>Estudiantes, caja, cocina y administración con permisos separados.</span></div>
+            </div>
+          </div>
+
+          <div class="login-cards">
+            <!-- Acceso estudiante -->
+            <div class="panel panel-login" id="loginEstudianteCard">
+              <div class="login-encabezado">
+                <span class="login-role-icon"><i class="fa-solid fa-user-graduate"></i></span>
+                <div>
+                  <span class="eyebrow">Acceso estudiante</span>
+                  <h2>Consulta tu comedor</h2>
+                  <p class="sub-modal">Usa tu nombre completo y tu contraseña institucional.</p>
+                </div>
+              </div>
+
+              <label class="etiqueta" for="loginNombre">Nombre completo</label>
+              <input id="loginNombre" class="campo" placeholder="Ej: Juan Pérez" autocomplete="username">
+              <label class="etiqueta" for="loginPassword">Contraseña institucional</label>
+              <input type="password" id="loginPassword" class="campo" placeholder="Tu contraseña" autocomplete="current-password">
+              <button id="btnEntrarUsuario" class="btn btn-primario btn-ancho btn-lg">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i> Entrar como estudiante
+              </button>
+              <p id="loginMsg" class="mensaje"></p>
+            </div>
+
+            <!-- Acceso administración -->
+            <div class="panel panel-login panel-login-admin">
+              <div class="login-encabezado">
+                <span class="login-role-icon login-role-icon-dark"><i class="fa-solid fa-user-shield"></i></span>
+                <div>
+                  <span class="eyebrow">Acceso administración</span>
+                  <h2>Panel de gestión</h2>
+                  <p class="sub-modal">Selecciona tu perfil e ingresa la contraseña asignada.</p>
+                </div>
+              </div>
+
+              <div class="perfil-selector" role="group" aria-label="Perfil de administración">
+                <button type="button" class="perfil-btn activo" data-perfil="admin"><i class="fa-solid fa-user-gear"></i> Administración</button>
+                <button type="button" class="perfil-btn" data-perfil="caja"><i class="fa-solid fa-cash-register"></i> Caja</button>
+                <button type="button" class="perfil-btn" data-perfil="cocinera"><i class="fa-solid fa-kitchen-set"></i> Cocinera</button>
+              </div>
+              <input type="hidden" id="perfilAdmin" value="admin">
+
+              <div id="adminLoginCuerpo" class="admin-login-cuerpo">
+                <label class="etiqueta" for="passwordAdmin">Contraseña del perfil</label>
+                <input type="password" id="passwordAdmin" class="campo" placeholder="Contraseña" autocomplete="current-password">
+                <label class="check">
+                  <input type="checkbox" id="adminNuevaPestana">
+                  <span>Abrir el panel en una pestaña nueva</span>
+                </label>
+                <button id="btnEntrarAdmin" class="btn btn-primario btn-ancho btn-lg">
+                  <i class="fa-solid fa-lock-open"></i> Entrar al panel
+                </button>
+                <p id="loginAdminMsg" class="mensaje"></p>
+              </div>
+
+              <!-- Compatibilidad con la navegación existente -->
+              <button id="btnMostrarAdmin" class="oculto" type="button">Administración</button>
+              <button id="btnVolverUsuario" class="oculto" type="button">Volver</button>
+            </div>
+          </div>
+          <p class="login-footnote"><i class="fa-solid fa-lock"></i> Las contraseñas no se guardan en el navegador. Cada perfil accede solo a sus módulos.</p>
+        </section>
+
+        <!-- ============ VISTA: ESTUDIANTE ============ -->
+        <section id="vistaUsuario" class="oculto">
+          <div class="page-intro">
+            <div>
+              <span class="eyebrow">Mi espacio</span>
+              <h2 class="saludo" id="saludoUsuario">Hola, </h2>
+              <p class="sub-modal" id="cursoUsuario"></p>
+            </div>
+            <div class="page-intro-actions">
+              <button id="btnCerrarSesionUsuario" class="btn btn-secundario"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</button>
+              <button id="btnAbrirAdmin" class="btn btn-enlace oculto" type="button">Abrir administración →</button>
+            </div>
+          </div>
+
+          <!-- Inicio estudiante -->
+          <div class="modulo" data-modulo="est-inicio" id="modEstInicio">
+            <div class="kpi-grid">
+              <article class="kpi-card kpi-brown">
+                <div class="kpi-icon"><i class="fa-solid fa-wallet"></i></div>
+                <div><span>Saldo disponible</span><strong id="saldoInicio">…</strong><small id="saldoInicioDetalle">Cargando…</small></div>
+              </article>
+              <article class="kpi-card kpi-green">
+                <div class="kpi-icon"><i class="fa-solid fa-utensils"></i></div>
+                <div><span>Precio del almuerzo</span><strong id="precioInicio">—</strong><small id="precioInicioDetalle">Definido por administración</small></div>
+              </article>
+              <article class="kpi-card kpi-blue">
+                <div class="kpi-icon"><i class="fa-solid fa-bowl-food"></i></div>
+                <div><span>Pedido de hoy</span><strong id="pedidoInicio">—</strong><small id="pedidoInicioDetalle">Sin pedido registrado</small></div>
+              </article>
+              <article class="kpi-card kpi-amber">
+                <div class="kpi-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                <div><span>Asistencia de hoy</span><strong id="asistenciaInicio">—</strong><small id="asistenciaInicioDetalle">Consultando…</small></div>
+              </article>
+            </div>
+
+            <div class="grid-2">
+              <div class="panel">
+                <div class="panel-cabecera">
+                  <div><span class="eyebrow">Accesos rápidos</span><h2>¿Qué quieres hacer?</h2></div>
+                </div>
+                <div class="quick-actions">
+                  <button type="button" class="quick-action" data-ir-modulo="est-comedor"><i class="fa-solid fa-wallet"></i><span>Ver mi saldo</span></button>
+                  <button type="button" class="quick-action" data-ir-modulo="est-recarga"><i class="fa-solid fa-arrow-down-to-line"></i><span>Recargar</span></button>
+                  <button type="button" class="quick-action" data-ir-modulo="est-solicitudes"><i class="fa-solid fa-receipt"></i><span>Mis solicitudes</span></button>
+                  <button type="button" class="quick-action" data-ir-modulo="est-asistencia"><i class="fa-solid fa-calendar-days"></i><span>Mi asistencia</span></button>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-cabecera">
+                  <div><span class="eyebrow">Mi pedido de hoy</span><h2>Estado del almuerzo</h2></div>
+                  <span class="chip chip-neutro" id="miPedidoChip">Sin pedido</span>
+                </div>
+                <p id="miPedidoDetalle" class="mensaje">Todavía no has pedido el almuerzo de hoy.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comedor estudiante -->
+          <div class="modulo oculto" data-modulo="est-comedor">
+            <section class="comedor-hero" aria-labelledby="comedorHeroTitulo">
+              <div class="comedor-hero-copy">
+                <span class="eyebrow eyebrow-light">Comedor · Luz y Verdad</span>
+                <h2 id="comedorHeroTitulo">Un buen almuerzo,<br><em>sin complicaciones.</em></h2>
+                <p>Pasa tu tarjeta o deja tu huella. Aquí tienes tu saldo, tu pedido de hoy y todos los movimientos de tu cuenta.</p>
+                <div class="comedor-hero-badges">
+                  <span><i class="fa-solid fa-bolt"></i> Pago al instante</span>
+                  <span><i class="fa-solid fa-shield-halved"></i> Saldo protegido</span>
+                  <span><i class="fa-solid fa-clock"></i> Listo en segundos</span>
+                </div>
+              </div>
+              <div class="comedor-hero-art" aria-hidden="true">
+                <div class="comedor-plato">
+                  <span class="comedor-plato-icono"><i class="fa-solid fa-utensils"></i></span>
+                </div>
+                <span class="comedor-hero-nota"><i class="fa-solid fa-star"></i> Comida fresca, todos los días</span>
+              </div>
+            </section>
+
+            <div class="comedor-layout">
+              <section class="tarjeta-saldo comedor-saldo" id="tarjetaSaldo" aria-labelledby="comedorSaldoTitulo">
+                <i class="fa-solid fa-utensils comedor-saldo-watermark" aria-hidden="true"></i>
+                <div class="comedor-saldo-top">
+                  <div>
+                    <span class="eyebrow eyebrow-light">Tu cuenta</span>
+                    <h2 id="comedorSaldoTitulo">Saldo para el comedor</h2>
+                  </div>
+                  <span class="comedor-saldo-icono" aria-hidden="true"><i class="fa-solid fa-wallet"></i></span>
+                </div>
+                <div class="saldo-cabecera"><span>Disponible hoy</span><span class="chip chip-neutro" id="chipSaldo">…</span></div>
+                <strong class="saldo-cifra" id="saldoUsuario">…</strong>
+                <p class="saldo-pie" id="saldoDetalle">Cargando tu saldo…</p>
+                <div class="saldo-datos">
+                  <div><span>Almuerzo</span><strong id="saldoPrecio">—</strong></div>
+                  <div><span>Almuerzos disponibles</span><strong id="saldoAlmuerzos">—</strong></div>
+                </div>
+                <div class="comedor-saldo-acciones">
+                  <button id="btnPagar" class="btn btn-primario btn-ancho btn-pagar btn-lg" disabled><i class="fa-solid fa-utensils"></i> Pagar almuerzo</button>
+                  <p id="pagoMsg" class="mensaje"></p>
+                  <button id="btnIrARecarga" class="enlace-boton oculto">¿Te falta saldo? Recargar ahora</button>
+                </div>
+                <p class="comedor-saldo-nota"><i class="fa-solid fa-lock"></i> Cada pago queda guardado en tu historial.</p>
+              </section>
+
+              <section class="panel comedor-pedido-card" aria-labelledby="comedorPedidoTitulo">
+                <div class="comedor-pedido-top">
+                  <div class="comedor-pedido-icono" aria-hidden="true"><i class="fa-solid fa-bowl-food"></i></div>
+                  <div class="comedor-pedido-titulo">
+                    <span class="eyebrow">Hoy en el comedor</span>
+                    <h2 id="comedorPedidoTitulo">Tu pedido</h2>
+                  </div>
+                  <span class="chip chip-neutro" id="miPedidoChipComedor">Sin pedido</span>
+                </div>
+
+                <div class="comedor-estado">
+                  <span class="comedor-estado-icono" aria-hidden="true"><i class="fa-solid fa-bell-concierge"></i></span>
+                  <p id="miPedidoDetalleComedor" class="comedor-estado-texto" aria-live="polite">Todavía no has pedido el almuerzo de hoy.</p>
+                </div>
+
+                <ol class="comedor-pasos" aria-label="Pasos para el almuerzo">
+                  <li class="activo"><span>1</span><div><strong>Pide</strong><small>Pasa tu tarjeta</small></div></li>
+                  <li><span>2</span><div><strong>Paga</strong><small>Tarjeta + huella</small></div></li>
+                  <li><span>3</span><div><strong>Recoge</strong><small>Buen provecho</small></div></li>
+                </ol>
+
+                <div class="comedor-accesos">
+                  <span><i class="fa-solid fa-id-card"></i> Tarjeta RFID</span>
+                  <span><i class="fa-solid fa-fingerprint"></i> Huella dactilar</span>
+                  <span class="comedor-accesos-activo"><i class="fa-solid fa-shield-halved"></i> Acceso seguro</span>
+                </div>
+
+                <div class="info-callout comedor-callout"><i class="fa-solid fa-circle-info"></i><p>Para pedir o pagar, pasa tu tarjeta en el lector del comedor y apoya tu dedo en el sensor cuando se te indique.</p></div>
+              </section>
+            </div>
+
+            <section class="panel comedor-historial" aria-labelledby="comedorHistorialTitulo">
+              <div class="comedor-historial-top">
+                <div class="comedor-historial-titulo">
+                  <span class="comedor-historial-icono" aria-hidden="true"><i class="fa-solid fa-clock-rotate-left"></i></span>
+                  <div>
+                    <span class="eyebrow">Movimientos</span>
+                    <h2 id="comedorHistorialTitulo">Historial de tu cuenta</h2>
+                  </div>
+                </div>
+                <span class="chip chip-neutro"><i class="fa-solid fa-list-ul"></i> Compras y recargas</span>
+              </div>
+              <div class="tabla-envoltura">
+                <table>
+                  <thead><tr><th>Nro</th><th>Tipo</th><th class="num">Monto (Bs)</th><th class="num">Saldo ant.</th><th class="num">Saldo nuevo</th><th>Fecha</th><th>Hora</th></tr></thead>
+                  <tbody id="tablaHistorial"></tbody>
+                </table>
+                <p id="vacioHistorial" class="vacio"><i class="fa-solid fa-receipt" aria-hidden="true"></i> Aún no tienes movimientos.</p>
+              </div>
+            </section>
+          </div>
+
+          <!-- Recarga estudiante -->
+          <div class="modulo oculto" data-modulo="est-recarga">
+            <div class="panel">
+              <div class="panel-cabecera">
+                <div><span class="eyebrow">Agregar saldo</span><h2>Paga y envía tu comprobante</h2><p class="sub-modal">Tu saldo se acredita solo cuando caja confirma el pago.</p></div>
+                <span class="chip chip-info">Paso a paso</span>
+              </div>
+              <button id="btnToggleRecarga" class="btn btn-secundario btn-ancho" aria-expanded="false" aria-controls="recargaCuerpo">Ver cómo pagar</button>
+              <div id="recargaCuerpo" class="oculto recarga-cuerpo">
+                <ol class="pasos">
+                  <li class="paso"><b>1</b><div><strong>Paga con el QR</strong><span>Escanea el código y transfiere el monto.</span></div></li>
+                  <li class="paso"><b>2</b><div><strong>Sube el comprobante</strong><span>Una foto o captura de la transferencia.</span></div></li>
+                  <li class="paso"><b>3</b><div><strong>Espera la aprobación</strong><span>Caja revisa y acredita tu saldo.</span></div></li>
+                </ol>
+                <div class="qr-bloque">
+                  <img src="/qr-pago.jpeg" alt="Código QR de pago" class="qr-imagen" id="qrImagen">
+                  <p class="qr-pista">Toca el código para verlo completo</p>
+                  <div class="titular-qr"><span class="etiqueta">Paga a</span><strong id="qrTitular">cargando…</strong><span class="pista" id="qrDatos"></span></div>
+                </div>
+                <div class="grid-2">
+                  <div class="campo-grupo">
+                    <label class="etiqueta" for="recargaMontoUsuario">Monto que pagaste</label>
+                    <div class="campo-monto"><input id="recargaMontoUsuario" type="number" min="1" step="0.5" inputmode="decimal" placeholder="0,00" class="campo"><span class="sufijo">Bs</span></div>
+                    <div class="chips-monto" data-input="recargaMontoUsuario">
+                      <button type="button" class="chip-btn" data-monto="10">10</button>
+                      <button type="button" class="chip-btn" data-monto="20">20</button>
+                      <button type="button" class="chip-btn" data-monto="50">50</button>
+                      <button type="button" class="chip-btn" data-monto="100">100</button>
+                    </div>
+                  </div>
+                  <div class="campo-grupo">
+                    <label class="etiqueta" for="recargaNota">Nota o referencia <span class="opcional">opcional</span></label>
+                    <input id="recargaNota" class="campo" placeholder="Ej: pago móvil, depósito…">
+                  </div>
+                </div>
+                <div class="campo-grupo">
+                  <span class="etiqueta">Comprobante</span>
+                  <div class="zona-soltar" id="zonaSoltar" tabindex="0" role="button">
+                    <input id="recargaArchivo" type="file" accept="image/*" class="input-oculto">
+                    <span class="zona-icono" aria-hidden="true"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+                    <span class="zona-texto"><strong>Toca o arrastra la foto</strong><span class="pista">JPG o PNG · la reducimos antes de subirla</span></span>
+                  </div>
+                  <div id="vistaPrevia" class="vista-previa oculto">
+                    <img id="vistaPreviaImg" alt="Vista previa del comprobante" class="vista-previa-img">
+                    <div class="vista-previa-info"><span id="vistaPreviaNombre"></span><span id="vistaPreviaPeso" class="pista"></span></div>
+                    <button type="button" id="btnQuitarArchivo" class="btn-icono" title="Quitar imagen" aria-label="Quitar imagen">&times;</button>
+                  </div>
+                  <p class="pista oculto" id="pistaArchivo"></p>
+                </div>
+                <button id="btnEnviarComprobante" class="btn btn-primario btn-ancho btn-enviar btn-lg"><i class="fa-solid fa-paper-plane"></i> Enviar comprobante</button>
+                <p id="comprobanteMsg" class="mensaje"></p>
+                <div id="revisionIA" class="revision oculto" role="status">
+                  <div class="revision-cabecera"><strong id="revisionTitulo">Revisión del comprobante</strong><span class="chip chip-neutro" id="revisionEstado">revisando</span></div>
+                  <ul id="revisionLista" class="revision-lista"></ul>
+                  <p class="pista revision-resumen" id="revisionResumen"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mis solicitudes de recarga -->
+          <div class="modulo oculto" data-modulo="est-solicitudes">
+            <div class="panel">
+              <div class="panel-cabecera">
+                <div>
+                  <span class="eyebrow">Recargas · seguimiento</span>
+                  <h2>Mis solicitudes</h2>
+                  <p class="sub-modal">Consulta si caja ya revisó tu comprobante, cuánto se autorizó y el motivo de un rechazo. Tu saldo solo cambia cuando la solicitud está aprobada.</p>
+                </div>
+                <button type="button" id="btnRefrescarMisSolicitudes" class="btn btn-secundario">
+                  <i class="fa-solid fa-rotate"></i> Actualizar
+                </button>
+              </div>
+              <div class="resumen-asistencia" id="resumenMisSolicitudes"></div>
+              <div class="tabla-envoltura">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Nro</th>
+                      <th>Fecha</th>
+                      <th class="num">Declarado (Bs)</th>
+                      <th class="num">Autorizado (Bs)</th>
+                      <th>Estado</th>
+                      <th>Revisión</th>
+                      <th>Comprobante</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tablaMisSolicitudes"></tbody>
+                </table>
+                <p id="vacioMisSolicitudes" class="vacio">Todavía no has enviado comprobantes.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Asistencia estudiante -->
+          <div class="modulo oculto" data-modulo="est-asistencia">
+            <div class="panel">
+              <div class="panel-cabecera">
+                <div><span class="eyebrow">Mi asistencia</span><h2>Entradas y salidas</h2><p class="sub-modal">Días que viniste al comedor, hora de entrada, salida y permanencia.</p></div>
+                <span class="chip chip-neutro" id="chipMiAsistencia">…</span>
+              </div>
+              <div class="filtros-periodo" role="group" aria-label="Período de asistencia">
+                <button type="button" class="filtro-periodo activo" data-periodo="dia">Hoy</button>
+                <button type="button" class="filtro-periodo" data-periodo="semana">Semana</button>
+                <button type="button" class="filtro-periodo" data-periodo="mes">Mes</button>
+              </div>
+              <div class="resumen-asistencia" id="resumenMiAsistencia"></div>
+              <div class="tabla-envoltura">
+                <table>
+                  <thead><tr><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Estado</th><th>Permanencia</th></tr></thead>
+                  <tbody id="tablaMiAsistencia"></tbody>
+                </table>
+                <p id="vacioMiAsistencia" class="vacio">Aún no tienes asistencias registradas.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ VISTA: ADMINISTRACIÓN / CAJA / COCINA ============ -->
+        <section id="vistaAdmin" class="oculto">
+          <div class="page-intro">
+            <div>
+              <span class="eyebrow" id="adminRolEyebrow">Administración</span>
+              <h2 id="adminRolTitulo">Panel de administración</h2>
+              <p class="sub-modal" id="adminRolDetalle">Gestiona el sistema de comedor y asistencia.</p>
+            </div>
+            <div class="page-intro-actions">
+              <span class="chip chip-ok" id="adminRolChip">Sesión activa</span>
+              <button id="btnAbrirAlumno" class="btn btn-enlace oculto">Abrir vista del alumno →</button>
+              <button id="btnCerrarSesion" class="btn btn-secundario"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</button>
+            </div>
+          </div>
+
+          <!-- Resumen operativo -->
+          <div class="modulo" data-modulo="admin-inicio">
+            <div class="kpi-grid" id="kpisCaja">
+              <article class="kpi-card kpi-amber"><div class="kpi-icon"><i class="fa-solid fa-receipt"></i></div><div><span>Comprobantes pendientes</span><strong id="kpiSolicitudesPendientes">—</strong><small>Esperando revisión de caja</small></div></article>
+              <article class="kpi-card kpi-green"><div class="kpi-icon"><i class="fa-solid fa-arrow-down-to-line"></i></div><div><span>Recargas de hoy</span><strong id="kpiRecargasHoy">—</strong><small>Monto acreditado</small></div></article>
+              <article class="kpi-card kpi-blue"><div class="kpi-icon"><i class="fa-solid fa-right-left"></i></div><div><span>Movimientos de hoy</span><strong id="kpiMovimientosHoy">—</strong><small>Recargas y cobros</small></div></article>
+              <article class="kpi-card kpi-red"><div class="kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></div><div><span>Saldo bajo</span><strong id="kpiSaldoBajo">—</strong><small>Estudiantes bajo el precio</small></div></article>
+            </div>
+            <div class="kpi-grid oculto" id="kpisCocina">
+              <article class="kpi-card kpi-amber"><div class="kpi-icon"><i class="fa-solid fa-bowl-food"></i></div><div><span>Pedidos del día</span><strong id="kpiPedidosTotal">—</strong><small>Registrados en el lector</small></div></article>
+              <article class="kpi-card kpi-blue"><div class="kpi-icon"><i class="fa-solid fa-hourglass-half"></i></div><div><span>Pendientes de pago</span><strong id="kpiPedidosPendientes">—</strong><small>Faltan por cobrar</small></div></article>
+              <article class="kpi-card kpi-green"><div class="kpi-icon"><i class="fa-solid fa-circle-check"></i></div><div><span>Por entregar</span><strong id="kpiPedidosEntregados">—</strong><small>Pagados, pendientes de cocina</small></div></article>
+              <article class="kpi-card kpi-red"><div class="kpi-icon"><i class="fa-solid fa-wallet"></i></div><div><span>Sin saldo</span><strong id="kpiPedidosSinSaldo">—</strong><small>Requieren recarga</small></div></article>
+            </div>
+
+            <div class="panel">
+              <div class="panel-cabecera">
+                <div><span class="eyebrow">Actividad reciente</span><h2>Último movimiento del lector</h2></div>
+                <span class="chip chip-neutro">RFID · huella · Firestore</span>
+              </div>
+              <div id="ultimo" class="ultimo idle">
+                <span class="ultimo-icono">—</span>
+                <div class="ultimo-cuerpo"><strong id="ultimoTitulo">Esperando tarjeta…</strong><span id="ultimoDetalle"></span></div>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="panel panel-acceso">
+                <div class="panel-cabecera"><div><span class="eyebrow">Caja</span><h2>Comprobantes por revisar</h2></div><button class="btn btn-secundario" data-ir-modulo="admin-comprobantes">Ver todos <i class="fa-solid fa-arrow-right"></i></button></div>
+                <div class="mini-lista" id="miniSolicitudes"><p class="vacio">Sin comprobantes pendientes.</p></div>
+              </div>
+              <div class="panel panel-acceso">
+                <div class="panel-cabecera"><div><span class="eyebrow">Comedor</span><h2>Pedidos de hoy</h2></div><button class="btn btn-secundario" data-ir-modulo="admin-pedidos">Ver todos <i class="fa-solid fa-arrow-right"></i></button></div>
+                <div class="mini-lista" id="miniPedidos"><p class="vacio">Sin pedidos registrados.</p></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comprobantes / recargas (caja) -->
+          <div class="modulo oculto" data-modulo="admin-comprobantes">
+            <div class="panel">
+              <div class="panel-cabecera">
+                <div><span class="eyebrow">Caja · comprobantes</span><h2>Solicitudes de recarga</h2><p class="sub-modal">Revisa la imagen, el monto y la revisión automática antes de acreditar. Cada solicitud se aprueba una sola vez y queda auditada.</p></div>
+                <span class="chip chip-neutro" id="contadorSolicitudes">0 pendientes</span>
+              </div>
+              <div class="info-callout"><i class="fa-solid fa-shield-halved"></i><p>La IA es una ayuda: nunca acredites un pago solo porque la revisión automática diga “correcto”. Verifica la imagen y escribe el importe autorizado. La aprobación es única y queda auditada.</p></div>
+              <div class="barra-filtros barra-filtros-solicitudes">
+                <select id="filtroEstadoSolicitud" class="campo" aria-label="Estado de las solicitudes">
+                  <option value="pendiente">Pendientes</option>
+                  <option value="todas">Todas</option>
+                  <option value="aprobada">Aprobadas</option>
+                  <option value="rechazada">Rechazadas</option>
+                </select>
+                <input type="search" id="buscarSolicitud" class="campo" placeholder="Buscar por estudiante o número…" autocomplete="off">
+              </div>
+              <div class="tabla-envoltura">
+                <table>
+                  <thead><tr><th>Nro</th><th>Estudiante</th><th class="num">Declarado</th><th class="num">Autorizado</th><th>Quién envía</th><th>A quién pagó</th><th>Hora del comprobante</th><th>Revisión automática</th><th>Estado</th><th>Comprobante</th><th>Acción</th></tr></thead>
+                  <tbody id="tablaSolicitudes"></tbody>
+                </table>
+                <p id="vacioSolicitudes" class="vacio">Sin solicitudes para los filtros seleccionados.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Saldos y movimientos (caja) -->
+          <div class="modulo oculto" data-modulo="admin-saldos">
+            <div class="panel">
+              <div class="panel-cabecera"><div><span class="eyebrow">Crédito manual</span><h2>Agregar saldo a un estudiante</h2><p class="sub-modal">Queda registrado en el historial y se puede revertir si te equivocaste.</p></div></div>
+              <div class="recarga-admin">
+                <div class="recarga-bloque">
+                  <label class="etiqueta" for="buscarRecarga">Buscar estudiante</label>
+                  <input type="search" id="buscarRecarga" class="campo" placeholder="Nombre o curso…" autocomplete="off">
+                  <label class="etiqueta" for="recargarEstudiante">Estudiante</label>
+                  <select id="recargarEstudiante" class="campo"></select>
+                  <p class="pista" id="pistaRecarga"></p>
+                </div>
+                <div class="recarga-bloque">
+                  <label class="etiqueta" for="recargarMonto">Monto</label>
+                  <div class="campo-monto"><input id="recargarMonto" type="number" min="0.5" step="0.5" value="10" inputmode="decimal" class="campo"><span class="sufijo">Bs</span></div>
+                  <div class="chips-monto" data-input="recargarMonto">
+                    <button type="button" class="chip-btn" data-monto="10">10</button>
+                    <button type="button" class="chip-btn" data-monto="20">20</button>
+                    <button type="button" class="chip-btn" data-monto="50">50</button>
+                    <button type="button" class="chip-btn" data-monto="100">100</button>
+                  </div>
+                  <label class="etiqueta" for="recargarMetodo">Método de pago</label>
+                  <select id="recargarMetodo" class="campo">
+                    <option value="efectivo">Efectivo</option>
+                    <option value="pago móvil">Pago móvil</option>
+                    <option value="transferencia">Transferencia</option>
+                    <option value="comprobante">Comprobante</option>
+                    <option value="manual" selected>Otro / manual</option>
+                  </select>
+                </div>
+              </div>
+              <div class="resumen-recarga">
+                <div class="resumen-celda"><span>Saldo actual</span><strong id="resumenActual">Bs 0,00</strong></div>
+                <span class="resumen-flecha" aria-hidden="true">&rarr;</span>
+                <div class="resumen-celda"><span>Saldo nuevo</span><strong id="resumenNuevo" class="destacado">Bs 0,00</strong></div>
+                <button id="btnRecargar" class="btn btn-primario btn-recargar" disabled>Agregar saldo</button>
+              </div>
+              <p id="recargaMsg" class="mensaje"></p>
+            </div>
+
+            <div class="panel">
+              <div class="panel-cabecera">
+                <div><span class="eyebrow">Movimientos</span><h2>Transacciones recientes</h2></div>
+                <div class="barra-filtros">
+                  <select id="filtroTipo" class="campo"><option value="todos">Todos los tipos</option><option value="COMPRA">Compras</option><option value="RECARGA">Recargas</option></select>
+                  <input type="date" id="filtroDesde" title="Desde" class="campo">
+                  <input type="date" id="filtroHasta" title="Hasta" class="campo">
+                  <input type="search" id="filtroTexto" class="campo" placeholder="Buscar estudiante…">
+                  <button id="btnExportar" class="btn btn-secundario"><i class="fa-solid fa-file-csv"></i> Exportar CSV</button>
+                </div>
+              </div>
+              <div class="tabla-envoltura">
+                <table>
+                  <thead><tr><th>Nro</th><th>Estudiante</th><th>Curso</th><th>Tipo</th><th class="num">Monto (Bs)</th><th class="num">Saldo ant.</th><th class="num">Saldo nuevo</th><th>Fecha</th><th>Hora</th><th>Método</th><th></th></tr></thead>
+                  <tbody id="tablaTransacciones"></tbody>
+                </table>
+                <p id="vacioTransacciones" class="vacio">Sin transacciones para los filtros seleccionados.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estudiantes -->
+          <div class="modulo oculto" data-modulo="admin-estudiantes">
+            <div class="panel">
+              <div class="panel-cabecera">
+                <div><span class="eyebrow">Estudiantes</span><h2>Registro y saldos</h2></div>
+                <button id="btnNuevoEstudiante" class="btn btn-primario" type="button"><i class="fa-solid fa-plus"></i> Nuevo estudiante</button>
+              </div>
+              <div id="nuevoEstudianteCuerpo" class="oculto nuevo-estudiante">
+                <div class="grid-2">
+                  <div><label class="etiqueta" for="nuevoNombre">Nombre</label><input id="nuevoNombre" class="campo" placeholder="Ej: Juan Pérez" autocomplete="off"></div>
+                  <div class="fila grupo-doble">
+                    <div class="grupo"><label class="etiqueta" for="nuevoCurso">Curso</label><input id="nuevoCurso" class="campo" placeholder="Ej: 6to" autocomplete="off"></div>
+                    <div class="grupo"><label class="etiqueta" for="nuevoId">ID (opcional)</label><input id="nuevoId" class="campo" placeholder="Se genera solo" autocomplete="off"></div>
+                  </div>
+                  <div><label class="etiqueta" for="nuevoRfid">Tarjeta RFID (opcional)</label><input id="nuevoRfid" class="campo" placeholder="Acerca el carnet al lector" autocomplete="off"></div>
+                  <div><label class="etiqueta" for="nuevoPassword">Contraseña</label><input id="nuevoPassword" class="campo" placeholder="Se genera sola y se muestra una vez" autocomplete="off"></div>
+                </div>
+                <button id="btnCrearEstudiante" class="btn btn-primario btn-crear"><i class="fa-solid fa-user-plus"></i> Crear estudiante</button>
+                <p id="nuevoEstudianteMsg" class="mensaje"></p>
+              </div>
+              <input type="search" id="buscarEstudiante" class="campo" placeholder="Buscar por nombre o curso…">
+              <div class="tabla-envoltura">
+                <table>
+                  <thead><tr><th>Nombre</th><th>Curso</th><th>Tarjeta</th><th class="num">Saldo (Bs)</th><th>Acciones</th></tr></thead>
+                  <tbody id="tablaEstudiantes"></tbody>
+                </table>
+                <p id="vacioEstudiantes" class="vacio">No hay estudiantes registrados.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pedidos -->
+          <div class="modulo oculto" data-modulo="admin-pedidos">
+            <div class="panel panel-pedidos">
+              <div class="panel-cabecera">
+                <div><span class="eyebrow">Comedor · pedidos</span><h2>Pedidos de almuerzo</h2><p class="sub-modal">El lector registra el pedido con la tarjeta. Al pasar de nuevo la tarjeta y la huella se cobra y queda <strong>pagado, pendiente de entrega</strong>. Cocina confirma la entrega por separado.</p></div>
+                <div class="fila-botones">
+                  <input type="date" id="fechaPedidos" class="campo" aria-label="Fecha de los pedidos">
+                  <button id="btnRefrescarPedidos" class="btn btn-secundario" type="button"><i class="fa-solid fa-rotate"></i> Actualizar</button>
+                </div>
+              </div>
+              <div class="resumen-asistencia" id="resumenPedidos"></div>
+              <div class="tabla-envoltura">
+                <table>
+                  <thead><tr><th>Hora</th><th>Estudiante</th><th>Curso</th><th>Estado</th><th class="num solo-caja">Monto (Bs)</th><th class="num solo-caja">Saldo (Bs)</th><th>Acción</th></tr></thead>
+                  <tbody id="tablaPedidos"></tbody>
+                </table>
+                <p id="vacioPedidos" class="vacio">Todavía no hay pedidos registrados para ese día.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Entregas -->
+          <div class="modulo oculto" data-modulo="admin-entregas">
+            <div class="panel">
+              <div class="panel-cabecera">
+                <div><span class="eyebrow">Cocina · entregas</span><h2>Entregas</h2><p class="sub-modal">Pedidos pagados pendientes de entregar y entregas ya confirmadas. La entrega no vuelve a descontar saldo.</p></div>
+                <span class="chip chip-ok" id="contadorEntregas">0 entregas</span>
+              </div>
+              <div class="tabla-envoltura">
+                <table>
+                  <thead><tr><th>Hora</th><th>Estudiante</th><th>Curso</th><th>Estado</th><th class="num solo-caja">Monto (Bs)</th><th>Acción</th></tr></thead>
+                  <tbody id="tablaEntregas"></tbody>
+                </table>
+                <p id="vacioEntregas" class="vacio">Aún no hay entregas registradas hoy.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Asistencia general -->
+          <div class="modulo oculto" data-modulo="admin-asistencia">
+            <div class="panel">
+              <div class="panel-cabecera">
+                <div><span class="eyebrow">Asistencia del lector</span><h2>Entradas y salidas</h2><p class="sub-modal">Lo que registra la tarjeta y la huella. Solo administración puede corregir manualmente.</p></div>
+                <input type="date" id="fechaAsistencia" class="campo" aria-label="Fecha de la asistencia">
+              </div>
+              <div class="resumen-asistencia" id="resumenAsistencia"></div>
+              <div class="tabla-envoltura">
+                <table>
+                  <thead><tr><th>Estudiante</th><th>Curso</th><th>Entrada</th><th>Salida</th><th>Estado</th><th>Acción</th></tr></thead>
+                  <tbody id="tablaAsistencias"></tbody>
+                </table>
+                <p id="vacioAsistencias" class="vacio">Sin registros para ese día.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Huellas -->
+          <div class="modulo oculto" data-modulo="admin-huellas">
+            <div class="panel">
+              <div class="panel-cabecera">
+                <div><span class="eyebrow">Asistencia · huella</span><h2>Huella dactilar</h2><p class="sub-modal">Si un estudiante olvidó su tarjeta, puede marcar con la huella registrada. La huella se guarda en el sensor, no en la web.</p></div>
+                <span class="chip chip-neutro" id="chipHuellas">0 registradas</span>
+              </div>
+              <div id="solicitudHuella" class="aviso-huella oculto" role="status" aria-live="polite">
+                <span class="aviso-huella-icono" id="huellaIcono">☝</span>
+                <div class="aviso-huella-texto"><strong id="huellaTitulo">Registrando huella…</strong><span id="huellaDetalle">Pon el dedo en el sensor del comedor.</span></div>
+                <button id="btnCancelarHuella" class="btn btn-secundario" type="button">Cancelar</button>
+              </div>
+              <input type="search" id="buscarHuella" class="campo" placeholder="Buscar estudiante por nombre o curso…">
+              <div class="tabla-envoltura">
+                <table>
+                  <thead><tr><th>Nombre</th><th>Curso</th><th>Huella</th><th>Acción</th></tr></thead>
+                  <tbody id="tablaHuellas"></tbody>
+                </table>
+                <p id="vacioHuellas" class="vacio">No hay estudiantes registrados.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Configuración -->
+          <div class="modulo oculto" data-modulo="admin-config">
+            <div class="grid-2">
+              <div class="panel">
+                <div class="panel-cabecera"><div><span class="eyebrow">Ajustes</span><h2>Precio del almuerzo</h2></div></div>
+                <label class="etiqueta" for="configPrecio">Precio de un almuerzo (Bs)</label>
+                <div class="fila"><div class="grupo"><input id="configPrecio" type="number" min="0" step="0.5" inputmode="decimal" class="campo"></div><button id="btnGuardarPrecio" class="btn btn-primario">Guardar</button></div>
+                <p id="configMsg" class="mensaje"></p>
+                <div class="sub-panel">
+                  <h4>Titular del QR de pago</h4>
+                  <p class="pista">La IA compara a quién dice el comprobante que se le pagó con este nombre.</p>
+                  <button id="btnLeerQr" class="btn btn-secundario btn-ancho"><i class="fa-solid fa-wand-magic-sparkles"></i> Leer el QR con IA</button>
+                  <label class="etiqueta" for="configTitular">Nombre del titular</label>
+                  <input id="configTitular" class="campo" placeholder="Nombre como aparece en el QR">
+                  <div class="fila grupo-doble">
+                    <div class="grupo"><label class="etiqueta" for="configCedula">Cédula</label><input id="configCedula" class="campo" placeholder="Opcional" inputmode="numeric"></div>
+                    <div class="grupo"><label class="etiqueta" for="configBanco">Banco</label><input id="configBanco" class="campo" placeholder="Opcional"></div>
+                  </div>
+                  <label class="etiqueta" for="configVentana">Antigüedad máxima del comprobante (horas)</label>
+                  <div class="fila"><div class="grupo"><input id="configVentana" type="number" min="1" max="720" step="1" value="48" class="campo"></div><button id="btnGuardarTitular" class="btn btn-primario">Guardar</button></div>
+                  <p id="titularMsg" class="mensaje"></p>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-cabecera"><div><span class="eyebrow">Diagnóstico</span><h2>Herramientas de prueba</h2></div></div>
+                <p class="sub-modal">Simula el paso de una tarjeta RFID escribiendo su UID. Úsalo solo para pruebas del lector.</p>
+                <label class="etiqueta" for="uidManual">UID de la tarjeta</label>
+                <div class="fila"><input id="uidManual" placeholder="Ej: 1486297920" class="campo"><button id="btnProbarUid" class="btn btn-secundario">Probar tarjeta</button></div>
+                <div class="info-callout"><i class="fa-solid fa-circle-info"></i><p>El sistema evita entregas y cobros duplicados usando un registro por estudiante y fecha. Las operaciones de caja quedan auditadas con responsable, fecha y estado.</p></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <footer class="pie">
+        <span>Complejo Integral Educativo Luz y Verdad · Sistema de asistencia y comedor</span>
+        <span class="pie-estado"><i class="fa-solid fa-circle"></i> Datos protegidos por Firestore</span>
+      </footer>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <div id="modalOverlay" class="modal-overlay oculto" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+    <div class="modal">
+      <h2 id="modalTitulo">Confirmar</h2>
+      <p id="modalTexto" class="sub-modal"></p>
+      <div id="modalDetalle" class="modal-detalle"></div>
+      <div id="modalCampoWrap" class="oculto">
+        <label class="etiqueta" for="modalCampo">Motivo</label>
+        <input id="modalCampo" class="campo" autocomplete="off">
+      </div>
+      <div class="modal-acciones">
+        <button id="modalCancelar" class="btn btn-secundario">Cancelar</button>
+        <button id="modalAceptar" class="btn btn-primario">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="lightbox" class="lightbox oculto" role="dialog" aria-modal="true" aria-label="Comprobante">
+    <button id="lightboxCerrar" class="lightbox-cerrar" aria-label="Cerrar">&times;</button>
+    <img id="lightboxImg" alt="Comprobante ampliado">
+  </div>
+
+  <!-- El SDK de Firebase se carga solo en modo nube (ver firebase-web.js). En
+       el servidor local la aplicación funciona sin conexión a gstatic. -->
+  <script src="/firebase-web.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
